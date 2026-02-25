@@ -15,7 +15,7 @@ pinecone-client
 
 # Embeddings
 sentence-transformers
-langchain-google-generativeai
+langchain-google-genai
 langchain-huggingface
 
 # PDF Parsing
