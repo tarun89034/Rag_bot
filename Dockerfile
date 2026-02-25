@@ -9,6 +9,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
+# Upgrade pip
+RUN pip install --no-cache-dir --upgrade pip
+
 # Install server dependencies
 COPY server/requirements.txt /app/server/requirements.txt
 RUN pip install --no-cache-dir -r /app/server/requirements.txt
@@ -17,8 +20,8 @@ RUN pip install --no-cache-dir -r /app/server/requirements.txt
 COPY client/requirements.txt /app/client/requirements.txt
 RUN pip install --no-cache-dir -r /app/client/requirements.txt
 
-# Pre-download the sentence-transformers model during build (faster startup)
-RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')"
+# Pre-download the sentence-transformers model (verbose for debugging)
+RUN python -c "print('Downloading model...'); from sentence_transformers import SentenceTransformer; model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2'); print('Model downloaded successfully.')"
 
 # Copy source code
 COPY server/ /app/server/
