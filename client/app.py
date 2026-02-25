@@ -1,7 +1,4 @@
 import streamlit as st
-st.set_option("server.enableXsrfProtection", False)
-st.set_option("server.enableCORS", False)
-
 from components.upload import render_uploader
 from components.history_download import render_history_download
 from components.chatUI import render_chat

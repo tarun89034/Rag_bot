@@ -2,9 +2,6 @@ import streamlit as st
 from utils.api import upload_pdfs_api
 import time
 
-st.set_option("server.enableXsrfProtection", False)
-st.set_option("server.enableCORS", False)
-
 def render_uploader():
     with st.sidebar:
         st.markdown("### 📄 Upload Documents")
