@@ -20,8 +20,8 @@ RUN pip install --no-cache-dir -r /app/server/requirements.txt
 COPY client/requirements.txt /app/client/requirements.txt
 RUN pip install --no-cache-dir -r /app/client/requirements.txt
 
-# Pre-download the sentence-transformers model (verbose for debugging)
-RUN python -c "print('Downloading model...'); from sentence_transformers import SentenceTransformer; model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2'); print('Model downloaded successfully.')"
+# Pre-download the sentence-transformers model (commented out to debug build failures)
+# RUN python -c "print('Downloading model...'); from sentence_transformers import SentenceTransformer; model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2'); print('Model downloaded successfully.')"
 
 # Copy source code
 COPY server/ /app/server/
