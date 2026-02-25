@@ -36,5 +36,9 @@ EXPOSE 7860
 
 # Set environment variable for internal API communication
 ENV API_URL=http://127.0.0.1:8080
+ENV PYTHONUNBUFFERED=1
+
+# Ensure permissions for the entire app directory (HF uses UID 1000)
+RUN chmod -R 777 /app
 
 CMD ["/app/start.sh"]
