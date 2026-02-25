@@ -9,39 +9,27 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Upgrade pip
-RUN pip install --no-cache-dir --upgrade pip
-
-# Install server dependencies
+# Upgrade pip and install all dependencies in one layer
 COPY server/requirements.txt /app/server/requirements.txt
-RUN pip install --no-cache-dir -r /app/server/requirements.txt
-
-# Install client dependencies
 COPY client/requirements.txt /app/client/requirements.txt
-RUN pip install --no-cache-dir -r /app/client/requirements.txt
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r /app/server/requirements.txt && \
+    pip install --no-cache-dir -r /app/client/requirements.txt
 
-# Pre-download the sentence-transformers model (commented out to debug build failures)
-# RUN python -c "print('Downloading model...'); from sentence_transformers import SentenceTransformer; model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2'); print('Model downloaded successfully.')"
-
-# Copy source code
+# Copy source code and script
 COPY server/ /app/server/
 COPY client/ /app/client/
 COPY start.sh /app/start.sh
 
-# Create upload directory
-RUN mkdir -p /app/server/uploaded_pdfs
+# Create upload directory and set permissions
+RUN mkdir -p /app/server/uploaded_pdfs && chmod -R 777 /app
 
-# Make start script executable
-RUN chmod +x /app/start.sh
-
-# Expose Streamlit port (public-facing for Hugging Face Spaces)
+# Expose Streamlit port
 EXPOSE 7860
 
-# Set environment variable for internal API communication
+# Environment variables
 ENV API_URL=http://127.0.0.1:8080
 ENV PYTHONUNBUFFERED=1
 
-# Ensure permissions for the entire app directory (HF uses UID 1000)
-RUN chmod -R 777 /app
-
-CMD ["/app/start.sh"]
+# Run with sh explicitly to avoid shebang/permission issues
+CMD ["sh", "/app/start.sh"]
