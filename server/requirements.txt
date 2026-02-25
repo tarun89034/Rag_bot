@@ -11,7 +11,7 @@ langchain-groq
 langchain-text-splitters
 
 # Vectorstore
-pinecone-client
+pinecone
 
 # Embeddings
 sentence-transformers
