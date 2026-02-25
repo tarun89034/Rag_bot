@@ -1,3 +1,12 @@
+---
+title: Ragbot 2.0
+emoji: 🧠
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+pinned: false
+---
+
 # 🧠 RagBot 2.0 — AI-Powered PDF Chat Assistant
 
 A modular **Retrieval-Augmented Generation (RAG)** application that lets users upload PDF documents and chat with an AI assistant. Built with a decoupled **FastAPI backend** and **Streamlit frontend**, using **Pinecone** as the vector store and **Groq's LLaMA3** as the LLM.
