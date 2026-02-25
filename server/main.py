@@ -1,4 +1,4 @@
-from fastapi import FastAPI,UploadFile,File,Form,Request
+from fastapi import FastAPI,UploadFile,File,Form,Request,HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
@@ -11,8 +11,12 @@ from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
 from pydantic import Field
 import os
+import shutil
 
 app=FastAPI(title="RagBot2.0")
+
+UPLOAD_DIR = "uploaded_pdfs"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 app.add_middleware(
     CORSMiddleware,
@@ -41,7 +45,19 @@ async def catch_exception_middleware(request:Request,call_next):
         return await call_next(request)
     except Exception as exc:
         logger.exception("UNHANDLED EXCEPTION")
-        return JSONResponse(status_code=500,content={"error":str(exc)})
+        return JSONResponse(status_code=500,content={"error":str(e)})
+
+# Upload single file to server (bypasses Streamlit's _stcore)
+@app.post("/api/upload")
+async def upload_file(file: UploadFile = File(...)):
+    try:
+        filename = file.filename or "unknown.pdf"
+        file_path = os.path.join(UPLOAD_DIR, filename)
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        return {"message": "File uploaded", "filename": filename}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
     
 @app.post("/upload_pdfs/")
 async def upload_pdfs(files:List[UploadFile]=File(...)):
@@ -53,6 +69,49 @@ async def upload_pdfs(files:List[UploadFile]=File(...)):
     except Exception as e:
         logger.exception("Error during pdf upload")
         return JSONResponse(status_code=500,content={"error":str(e)})
+
+# Upload from URL (bypasses Streamlit's _stcore entirely)
+@app.post("/upload_from_url/")
+async def upload_from_url(request: Request):
+    try:
+        body = await request.json()
+        url = body.get("url")
+        if not url:
+            return JSONResponse(status_code=400, content={"error": "No URL provided"})
+        
+        # Download file from URL
+        import httpx
+        response = httpx.get(url, timeout=30)
+        if response.status_code != 200:
+            return JSONResponse(status_code=400, content={"error": f"Failed to download: {response.status_code}"})
+        
+        # Extract filename from URL
+        filename = url.split("/")[-1] or "document.pdf"
+        if not filename.endswith(".pdf"):
+            filename += ".pdf"
+        
+        # Save file
+        file_path = os.path.join(UPLOAD_DIR, filename)
+        with open(file_path, "wb") as f:
+            f.write(response.content)
+        
+        # Process the file
+        from pathlib import Path
+        from modules.pdf_handlers import process_pdf
+        
+        # Create a simple file-like object
+        class FileObj:
+            def __init__(self, name, content):
+                self.filename = name
+                self.file = __import__('io').BytesIO(content)
+        
+        files = [FileObj(filename, response.content)]
+        load_vectorstore(files)
+        
+        return {"message": f"File {filename} processed successfully"}
+    except Exception as e:
+        logger.exception("Error during URL upload")
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
 
 @app.post("/ask/")

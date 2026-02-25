@@ -33,6 +33,7 @@ loguru
 
 # File Uploads
 aiofiles
+httpx
 
 # Process
 tqdm
