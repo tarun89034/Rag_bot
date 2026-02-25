@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libgomp1 \
     curl \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 # Upgrade pip and install all dependencies in one layer
@@ -21,11 +22,14 @@ COPY server/ /app/server/
 COPY client/ /app/client/
 COPY start.sh /app/start.sh
 
+# Make start.sh executable
+RUN chmod +x /app/start.sh
+
 # Create upload directory and set permissions
 RUN mkdir -p /app/server/uploaded_pdfs && chmod -R 777 /app
 
-# Expose Streamlit port
-EXPOSE 7860
+# Expose ports (Streamlit and FastAPI)
+EXPOSE 7860 8080
 
 # Environment variables
 ENV API_URL=http://127.0.0.1:8080
