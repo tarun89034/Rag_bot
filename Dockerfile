@@ -22,6 +22,7 @@ RUN pip install --no-cache-dir -r /app/client/requirements.txt || echo "Client d
 COPY server/ /app/server/
 COPY client/ /app/client/
 COPY start.sh /app/start.sh
+COPY .streamlit /app/.streamlit
 
 # Make start.sh executable
 RUN chmod +x /app/start.sh
