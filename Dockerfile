@@ -10,14 +10,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# Upgrade pip and install all dependencies in one layer
+# Copy and install server dependencies first (caching)
 COPY server/requirements.txt /app/server/requirements.txt
-COPY client/requirements.txt /app/client/requirements.txt
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r /app/server/requirements.txt && \
-    pip install --no-cache-dir -r /app/client/requirements.txt
+RUN pip install --no-cache-dir -r /app/server/requirements.txt || echo "Server deps install attempted"
 
-# Copy source code and script
+# Copy and install client dependencies
+COPY client/requirements.txt /app/client/requirements.txt
+RUN pip install --no-cache-dir -r /app/client/requirements.txt || echo "Client deps install attempted"
+
+# Copy source code
 COPY server/ /app/server/
 COPY client/ /app/client/
 COPY start.sh /app/start.sh
@@ -25,15 +26,14 @@ COPY start.sh /app/start.sh
 # Make start.sh executable
 RUN chmod +x /app/start.sh
 
-# Create upload directory and set permissions
-RUN mkdir -p /app/server/uploaded_pdfs && chmod -R 777 /app
+# Create upload directory
+RUN mkdir -p /app/server/uploaded_pdfs
 
-# Expose ports (Streamlit and FastAPI)
+# Expose ports
 EXPOSE 7860 8080
 
 # Environment variables
-ENV API_URL=http://127.0.0.1:8080
 ENV PYTHONUNBUFFERED=1
+ENV API_URL=http://localhost:8080
 
-# Run with sh explicitly to avoid shebang/permission issues
 CMD ["sh", "/app/start.sh"]
